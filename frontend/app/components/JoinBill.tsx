@@ -9,8 +9,10 @@ import { PublicKey } from '@solana/web3.js';
 export default function JoinBill() {
   const { connected } = useWallet();
   const program = useBillSplitProgram();
-  const [billId, setBillId] = useState('');
-  const [amount, setAmount] = useState('');
+  const [formData, setFormData] = useState({
+    billId: '',
+    amount: '',
+  });
   const [loading, setLoading] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -19,30 +21,24 @@ export default function JoinBill() {
 
     try {
       setLoading(true);
-      const billPublicKey = new PublicKey(billId);
-      const amountLamports = parseFloat(amount) * 1e9; // Convert to lamports
+      const billPublicKey = new PublicKey(formData.billId);
+      const amount = parseFloat(formData.amount) * 1e9; // Convert to lamports
 
-      // First verify the bill exists
-      const billAccount = await program.getBill(billPublicKey);
-      if (!billAccount) {
-        throw new Error('Bill not found');
-      }
-
-      const { participantKeypair, tx } = await program.addParticipant(
+      await program.addParticipant(
         billPublicKey,
-        amountLamports
+        amount
       );
 
       toast.success('Successfully joined the bill!');
-      console.log('Transaction:', tx);
-      console.log('Participant address:', participantKeypair.publicKey.toString());
-
+      
       // Reset form
-      setBillId('');
-      setAmount('');
-    } catch (error) {
+      setFormData({
+        billId: '',
+        amount: '',
+      });
+    } catch (error: any) {
       console.error('Error joining bill:', error);
-      toast.error('Failed to join bill');
+      toast.error(error.message || 'Failed to join bill');
     } finally {
       setLoading(false);
     }
@@ -62,7 +58,7 @@ export default function JoinBill() {
   return (
     <div className="card w-96 bg-forest-light shadow-xl">
       <div className="card-body">
-        <h2 className="card-title text-forest-dark">Join Existing Bill</h2>
+        <h2 className="card-title text-forest-dark">Join Bill</h2>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="form-control">
             <label className="label">
@@ -72,8 +68,8 @@ export default function JoinBill() {
               type="text"
               placeholder="Enter bill public key"
               className="input input-bordered w-full"
-              value={billId}
-              onChange={(e) => setBillId(e.target.value)}
+              value={formData.billId}
+              onChange={(e) => setFormData({ ...formData, billId: e.target.value })}
               required
               disabled={loading}
             />
@@ -81,15 +77,15 @@ export default function JoinBill() {
           
           <div className="form-control">
             <label className="label">
-              <span className="label-text text-forest-dark">Your Share (SOL)</span>
+              <span className="label-text text-forest-dark">Amount (SOL)</span>
             </label>
             <input
               type="number"
               step="0.001"
               placeholder="Enter your share amount"
               className="input input-bordered w-full"
-              value={amount}
-              onChange={(e) => setAmount(e.target.value)}
+              value={formData.amount}
+              onChange={(e) => setFormData({ ...formData, amount: e.target.value })}
               required
               disabled={loading}
             />

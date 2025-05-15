@@ -1,9 +1,9 @@
 import * as anchor from "@project-serum/anchor";
 import { Program } from "@project-serum/anchor";
-import { PublicKey } from "@solana/web3.js";
-import { RestaurantBillSplit } from "../types/restaurant_bill_split";
+import { PublicKey, Keypair } from "@solana/web3.js";
+import { RestaurantBillSplit } from '../types/restaurant_bill_split';
 
-const PROGRAM_ID = new PublicKey("5yivUPu1h8DUKsiSw6kYnTZD7u5bny9SeyweBFfRAyfZ");
+export const PROGRAM_ID = new PublicKey("5yivUPu1h8DUKsiSw6kYnTZD7u5bny9SeyweBFfRAyfZ");
 
 const IDL: RestaurantBillSplit = {
   version: "0.1.0",
@@ -38,9 +38,8 @@ const IDL: RestaurantBillSplit = {
         { name: "bill", isMut: true, isSigner: false },
         { name: "participant", isMut: true, isSigner: false },
         { name: "user", isMut: true, isSigner: true },
-        { name: "userToken", isMut: true, isSigner: false },
-        { name: "restaurantToken", isMut: true, isSigner: false },
-        { name: "tokenProgram", isMut: false, isSigner: false },
+        { name: "restaurant", isMut: true, isSigner: false },
+        { name: "systemProgram", isMut: false, isSigner: false },
       ],
       args: [],
     },
@@ -84,64 +83,82 @@ export function getProgram(provider: anchor.AnchorProvider) {
   return new Program<RestaurantBillSplit>(IDL, PROGRAM_ID, provider);
 }
 
-export async function createBill(
-  program: Program<RestaurantBillSplit>,
-  restaurantName: string,
-  billId: string,
-  totalAmount: anchor.BN
-) {
-  const bill = anchor.web3.Keypair.generate();
-  
-  await program.methods
-    .createBill(restaurantName, billId, totalAmount)
-    .accounts({
-      bill: bill.publicKey,
-      restaurant: program.provider.publicKey,
-      systemProgram: anchor.web3.SystemProgram.programId,
-    })
-    .signers([bill])
-    .rpc();
+export class BillSplitProgram {
+  constructor(private program: Program<RestaurantBillSplit>) {}
 
-  return bill;
-}
+  async createBill(
+    restaurantName: string,
+    billId: string,
+    totalAmount: number,
+    billKeypair: Keypair
+  ) {
+    const tx = await this.program.methods
+      .createBill(restaurantName, billId, new anchor.BN(totalAmount))
+      .accounts({
+        bill: billKeypair.publicKey,
+        restaurant: this.program.provider.publicKey,
+        systemProgram: anchor.web3.SystemProgram.programId,
+      })
+      .signers([billKeypair])
+      .rpc();
 
-export async function addParticipant(
-  program: Program<RestaurantBillSplit>,
-  billPublicKey: PublicKey,
-  amount: anchor.BN
-) {
-  const participant = anchor.web3.Keypair.generate();
-  
-  await program.methods
-    .addParticipant(amount)
-    .accounts({
-      bill: billPublicKey,
-      participant: participant.publicKey,
-      user: program.provider.publicKey,
-      systemProgram: anchor.web3.SystemProgram.programId,
-    })
-    .signers([participant])
-    .rpc();
+    return { tx, billKeypair };
+  }
 
-  return participant;
-}
+  async addParticipant(
+    billPublicKey: PublicKey,
+    amount: number
+  ) {
+    const participantKeypair = Keypair.generate();
 
-export async function settlePayment(
-  program: Program<RestaurantBillSplit>,
-  billPublicKey: PublicKey,
-  participantPublicKey: PublicKey,
-  userTokenAccount: PublicKey,
-  restaurantTokenAccount: PublicKey
-) {
-  await program.methods
-    .settlePayment()
-    .accounts({
-      bill: billPublicKey,
-      participant: participantPublicKey,
-      user: program.provider.publicKey,
-      userToken: userTokenAccount,
-      restaurantToken: restaurantTokenAccount,
-      tokenProgram: new PublicKey("11111111111111111111111111111111"),
-    })
-    .rpc();
+    const tx = await this.program.methods
+      .addParticipant(new anchor.BN(amount))
+      .accounts({
+        bill: billPublicKey,
+        participant: participantKeypair.publicKey,
+        user: this.program.provider.publicKey,
+        systemProgram: anchor.web3.SystemProgram.programId,
+      })
+      .signers([participantKeypair])
+      .rpc();
+
+    return { tx, participantKeypair };
+  }
+
+  async settlePayment(
+    billPublicKey: PublicKey,
+    participantPublicKey: PublicKey,
+    restaurantPublicKey: PublicKey
+  ) {
+    const tx = await this.program.methods
+      .settlePayment()
+      .accounts({
+        bill: billPublicKey,
+        participant: participantPublicKey,
+        user: this.program.provider.publicKey,
+        restaurant: restaurantPublicKey,
+        systemProgram: anchor.web3.SystemProgram.programId,
+      })
+      .rpc();
+
+    return { tx };
+  }
+
+  async getBill(billPublicKey: PublicKey) {
+    try {
+      return await this.program.account.billAccount.fetch(billPublicKey);
+    } catch (error) {
+      console.error('Error fetching bill:', error);
+      throw error;
+    }
+  }
+
+  async getParticipant(participantPublicKey: PublicKey) {
+    try {
+      return await this.program.account.participantAccount.fetch(participantPublicKey);
+    } catch (error) {
+      console.error('Error fetching participant:', error);
+      throw error;
+    }
+  }
 } 

@@ -27,6 +27,6 @@ export function useBillSplitProgram() {
       provider
     );
 
-    return new BillSplitProgram(program, provider);
+    return new BillSplitProgram(program);
   }, [connection, wallet]);
 } 

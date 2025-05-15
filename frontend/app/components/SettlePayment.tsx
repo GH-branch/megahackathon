@@ -4,13 +4,15 @@ import { useState } from 'react';
 import { useWallet } from '@solana/wallet-adapter-react';
 import { useBillSplitProgram } from '../hooks/useBillSplitProgram';
 import { toast } from 'react-hot-toast';
-import { PublicKey, SystemProgram } from '@solana/web3.js';
+import { PublicKey } from '@solana/web3.js';
 
 export default function SettlePayment() {
   const { connected } = useWallet();
   const program = useBillSplitProgram();
-  const [billId, setBillId] = useState('');
-  const [participantId, setParticipantId] = useState('');
+  const [formData, setFormData] = useState({
+    billId: '',
+    participantId: '',
+  });
   const [loading, setLoading] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -19,35 +21,31 @@ export default function SettlePayment() {
 
     try {
       setLoading(true);
-      const billPublicKey = new PublicKey(billId);
-      const participantPublicKey = new PublicKey(participantId);
+      const billPublicKey = new PublicKey(formData.billId);
+      const participantPublicKey = new PublicKey(formData.participantId);
 
-      // First verify the bill and participant exist
+      // Get the bill to get the restaurant's public key
       const billAccount = await program.getBill(billPublicKey);
       if (!billAccount) {
         throw new Error('Bill not found');
       }
 
-      const participantAccount = await program.getParticipant(participantPublicKey);
-      if (!participantAccount) {
-        throw new Error('Participant not found');
-      }
-
-      const tx = await program.settlePayment(
+      await program.settlePayment(
         billPublicKey,
         participantPublicKey,
         billAccount.restaurant
       );
 
       toast.success('Payment settled successfully!');
-      console.log('Transaction:', tx);
-
+      
       // Reset form
-      setBillId('');
-      setParticipantId('');
-    } catch (error) {
+      setFormData({
+        billId: '',
+        participantId: '',
+      });
+    } catch (error: any) {
       console.error('Error settling payment:', error);
-      toast.error('Failed to settle payment');
+      toast.error(error.message || 'Failed to settle payment');
     } finally {
       setLoading(false);
     }
@@ -77,8 +75,8 @@ export default function SettlePayment() {
               type="text"
               placeholder="Enter bill public key"
               className="input input-bordered w-full"
-              value={billId}
-              onChange={(e) => setBillId(e.target.value)}
+              value={formData.billId}
+              onChange={(e) => setFormData({ ...formData, billId: e.target.value })}
               required
               disabled={loading}
             />
@@ -92,8 +90,8 @@ export default function SettlePayment() {
               type="text"
               placeholder="Enter participant public key"
               className="input input-bordered w-full"
-              value={participantId}
-              onChange={(e) => setParticipantId(e.target.value)}
+              value={formData.participantId}
+              onChange={(e) => setFormData({ ...formData, participantId: e.target.value })}
               required
               disabled={loading}
             />

@@ -25,7 +25,7 @@ export default function CreateBillForm() {
       const amount = parseFloat(formData.totalAmount) * 1e9; // Convert to lamports
       const billKeypair = Keypair.generate();
       
-      const { tx } = await program.createBill(
+      await program.createBill(
         formData.restaurantName,
         formData.billId,
         amount,
@@ -33,10 +33,7 @@ export default function CreateBillForm() {
       );
 
       toast.success(`Bill created successfully! Bill ID: ${billKeypair.publicKey.toString()}`);
-      console.log('Transaction:', tx);
-      console.log('Bill address:', billKeypair.publicKey.toString());
-      console.log('Restaurant address:', publicKey.toString());
-
+      
       // Reset form
       setFormData({
         restaurantName: '',

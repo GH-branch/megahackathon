@@ -19,7 +19,7 @@ export default function Home() {
       
       <div className="container mx-auto">
         <div className="flex justify-between items-center mb-8">
-          <h1 className="text-4xl font-bold text-forest-light">Forest Dining</h1>
+          <h1 className="text-4xl font-bold text-forest-light">AA Go</h1>
           <WalletMultiButton />
         </div>
 
