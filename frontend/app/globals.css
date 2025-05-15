@@ -1,0 +1,80 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --foreground-rgb: 26, 47, 28; /* forest-dark */
+  --background-start-rgb: 44, 85, 48; /* forest-primary */
+  --background-end-rgb: 26, 47, 28; /* forest-dark */
+}
+
+body {
+  color: rgb(var(--foreground-rgb));
+  background: linear-gradient(
+    to bottom,
+    rgb(var(--background-start-rgb)),
+    rgb(var(--background-end-rgb))
+  );
+  min-height: 100vh;
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #E6EFE9; /* forest-light */
+}
+
+::-webkit-scrollbar-thumb {
+  background: #8BA888; /* forest-secondary */
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #2C5530; /* forest-primary */
+}
+
+/* Custom styles for wallet button */
+.wallet-adapter-button {
+  background-color: #D4B483 !important; /* forest-accent */
+  color: #1A2F1C !important; /* forest-dark */
+}
+
+.wallet-adapter-button:hover {
+  background-color: #2C5530 !important; /* forest-primary */
+  color: #E6EFE9 !important; /* forest-light */
+}
+
+/* Card hover effects */
+.card {
+  transition: transform 0.2s ease-in-out;
+}
+
+.card:hover {
+  transform: translateY(-4px);
+}
+
+/* Input focus styles */
+.input:focus {
+  border-color: #2C5530 !important; /* forest-primary */
+  box-shadow: 0 0 0 2px rgba(44, 85, 48, 0.2);
+}
+
+/* Button hover effects */
+.btn-primary:hover {
+  filter: brightness(110%);
+}
+
+/* Hero section overlay */
+.hero::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(26, 47, 28, 0.6); /* forest-dark with opacity */
+  z-index: 1;
+} 

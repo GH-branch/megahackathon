@@ -1,0 +1,177 @@
+export const IDL = {
+  "version": "0.1.0",
+  "name": "restaurant_bill_split",
+  "instructions": [
+    {
+      "name": "createBill",
+      "accounts": [
+        {
+          "name": "bill",
+          "isMut": true,
+          "isSigner": true
+        },
+        {
+          "name": "restaurant",
+          "isMut": true,
+          "isSigner": true
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false
+        }
+      ],
+      "args": [
+        {
+          "name": "restaurantName",
+          "type": "string"
+        },
+        {
+          "name": "billId",
+          "type": "string"
+        },
+        {
+          "name": "totalAmount",
+          "type": "u64"
+        }
+      ]
+    },
+    {
+      "name": "addParticipant",
+      "accounts": [
+        {
+          "name": "bill",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "participant",
+          "isMut": true,
+          "isSigner": true
+        },
+        {
+          "name": "user",
+          "isMut": true,
+          "isSigner": true
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false
+        }
+      ],
+      "args": [
+        {
+          "name": "amount",
+          "type": "u64"
+        }
+      ]
+    },
+    {
+      "name": "settlePayment",
+      "accounts": [
+        {
+          "name": "bill",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "participant",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "user",
+          "isMut": true,
+          "isSigner": true
+        },
+        {
+          "name": "restaurant",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false
+        }
+      ],
+      "args": []
+    }
+  ],
+  "accounts": [
+    {
+      "name": "BillAccount",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "restaurant",
+            "type": "publicKey"
+          },
+          {
+            "name": "billId",
+            "type": "string"
+          },
+          {
+            "name": "totalAmount",
+            "type": "u64"
+          },
+          {
+            "name": "paidAmount",
+            "type": "u64"
+          },
+          {
+            "name": "isSettled",
+            "type": "bool"
+          },
+          {
+            "name": "participantsCount",
+            "type": "u8"
+          }
+        ]
+      }
+    },
+    {
+      "name": "ParticipantAccount",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "user",
+            "type": "publicKey"
+          },
+          {
+            "name": "bill",
+            "type": "publicKey"
+          },
+          {
+            "name": "amount",
+            "type": "u64"
+          },
+          {
+            "name": "isPaid",
+            "type": "bool"
+          }
+        ]
+      }
+    }
+  ],
+  "errors": [
+    {
+      "code": 6000,
+      "name": "AmountOverflow",
+      "msg": "Amount would overflow"
+    },
+    {
+      "code": 6001,
+      "name": "BillSettled",
+      "msg": "Bill already settled"
+    },
+    {
+      "code": 6002,
+      "name": "AlreadyPaid",
+      "msg": "Participant already paid"
+    }
+  ]
+} as const; 
